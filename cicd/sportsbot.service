@@ -1,0 +1,11 @@
+[Unit]
+Description=TSBot
+
+[Service]
+ExecStart=/home/ubuntu/.nodenv/shims/yarn start
+WorkingDirectory=/home/ubuntu/tsbot
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

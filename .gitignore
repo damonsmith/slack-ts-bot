@@ -1,0 +1,8 @@
+dist
+.dockerenv
+.env
+node_modules
+yarn-error.log
+env.ts
+vault-password
+ansible-playbook.retry

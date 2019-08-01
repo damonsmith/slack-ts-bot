@@ -1,0 +1,23 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "TSBot",
+			"type": "node",
+			"request": "launch",
+			"program": "${workspaceRoot}/node_modules/ts-node/dist/bin.js",
+			"args": ["src/index.ts"],
+			"cwd": "${workspaceRoot}",
+			"protocol": "inspector"
+		},
+		{
+			"name": "Health Check Runner",
+			"type": "node",
+			"request": "launch",
+			"program": "${workspaceRoot}/node_modules/ts-node/dist/bin.js",
+			"args": ["src/handlers/environments/runner.ts"],
+			"cwd": "${workspaceRoot}",
+			"protocol": "inspector"
+		}
+	]
+}

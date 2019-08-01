@@ -1,0 +1,29 @@
+{
+	"name": "slack-ts-bot",
+	"version": "1.0.0",
+	"private": true,
+	"description": "A TypeScript chat bot for Slack",
+	"scripts": {
+		"start": "ts-node src/index.ts",
+		"typecheck": "tsc --noEmit --project tsconfig.json",
+		"decrypt-config": "ansible-playbook cicd/ansible-playbook.yml --vault-password-file ./vault-password --extra-vars @cicd/secret-config.yml"
+	},
+	"dependencies": {
+		"@slack/client": "^4.2.2",
+		"@types/node-fetch": "^2.1.2",
+		"@types/request": "^2.47.1",
+		"@types/request-promise": "^4.1.42",
+		"@types/table": "^4.0.5",
+		"crypto-json": "^2.0.2",
+		"moment": "^2.24.0",
+		"node-fetch": "^2.2.0",
+		"request": "^2.87.0",
+		"request-promise": "^4.2.2",
+		"table": "^5.4.1",
+		"tough-cookie": "^2.4.3",
+		"ts-node": "^7.0.0",
+		"typescript": "^3.0.1"
+	},
+	"author": "Damon Smith",
+	"license": "GPLv3.0"
+}

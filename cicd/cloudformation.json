@@ -1,0 +1,115 @@
+{
+	"Description": "TSBot single instance auto scaling group",
+	"Parameters": {
+		"ImageId": {
+			"Type": "String",
+			"Default": "ami-07a3bd4944eb120a0"
+		},
+		"SSHKey": {
+			"Type": "AWS::SSM::Parameter::Value<String>",
+			"Default": "/app/tsbot/ssh_key"
+		},
+		"VaultPassword": {
+			"Type": "AWS::SSM::Parameter::Value<String>",
+			"Default": "/app/tsbot/vault_password"
+		}
+	},
+	"Resources": {
+		"TSBotServerLaunchConfig": {
+			"Type": "AWS::AutoScaling::LaunchConfiguration",
+			"Properties": {
+				"KeyName": "<your_key_name>",
+				"ImageId": {
+					"Ref": "ImageId"
+				},
+				"SecurityGroups": ["sg-024cc8175bd8e8553"],
+				"InstanceType": "t3.micro",
+				"UserData": {
+					"Fn::Base64": {
+						"Fn::Join": [
+							"",
+							[
+								"#!/bin/bash\n",
+								"export DEBIAN_FRONTEND=noninteractive\n",
+								"apt-get update\n",
+								"apt-get install -y git unzip zip wget curl awscli python python-pip make ansible\n",
+								"pip install pyyaml\n",
+								"su - ubuntu -c 'echo \"<git_server_known_hosts_key>\" >> /home/ubuntu/.ssh/known_hosts'\n",
+								"su - ubuntu -c 'echo \"<git_server_known_hosts_key>\" >> /home/ubuntu/.ssh/known_hosts'\n",
+								"su - ubuntu -c 'echo \"",
+								{ "Ref": "SSHKey" },
+								"\" > /home/ubuntu/.ssh/id_rsa'\n",
+								"su - ubuntu -c 'chmod 400 /home/ubuntu/.ssh/*'\n",
+								"su - ubuntu -c 'git clone <git_repo_url>'\n",
+								"su - ubuntu -c 'echo \"",
+								{ "Ref": "VaultPassword" },
+								"\" > /home/ubuntu/tsbot/vault-password'\n",
+								"su - ubuntu -c '/home/ubuntu/tsbot/cicd/setup-machine.sh'\n",
+								"echo 'PATH=$PATH:~/.nodenv/bin:~/.nodenv/shims' | tee -a /etc/profile.d/nodenv.sh\n",
+								"su - ubuntu -c 'git clone https://github.com/nodenv/nodenv.git /home/ubuntu/.nodenv'\n",
+								"su - ubuntu -c 'git clone https://github.com/nodenv/node-build.git $(nodenv root)/plugins/node-build'\n",
+								"su - ubuntu -c 'cd ~/tsbot; nodenv install'\n",
+								"su - ubuntu -c 'cd ~/tsbot; npm install -g yarn'\n",
+								"su - ubuntu -c 'cd ~/tsbot; nodenv rehash'\n",
+								"su - ubuntu -c 'cd ~/tsbot; yarn install'\n",
+								"su - ubuntu -c 'cd ~/tsbot; yarn decrypt-config'\n",
+								"cp /home/ubuntu/tsbot/cicd/tsbot.service /etc/systemd/system\n",
+								"systemctl daemon-reload\n",
+								"systemctl start tsbot\n",
+								"systemctl enable tsbot\n",
+								"echo \"* * * * * ubuntu cd /home/ubuntu/tsbot && /home/ubuntu/tsbot/cicd/update.sh\" >> /etc/crontab\n"
+							]
+						]
+					}
+				}
+			}
+		},
+
+		"SingleInstanceAutoScalingGroup": {
+			"Type": "AWS::AutoScaling::AutoScalingGroup",
+			"Properties": {
+				"AvailabilityZones": { "Fn::GetAZs": "" },
+				"LaunchConfigurationName": {
+					"Ref": "TSBotServerLaunchConfig"
+				},
+				"MinSize": "1",
+				"MaxSize": "1",
+				"VPCZoneIdentifier": [
+					{
+						"Fn::ImportValue": "account-settings-vpc01-subnet-app-a-id"
+					},
+					{
+						"Fn::ImportValue": "account-settings-vpc01-subnet-app-b-id"
+					},
+					{
+						"Fn::ImportValue": "account-settings-vpc01-subnet-app-c-id"
+					}
+				],
+				"Tags": [
+					{
+						"Key": "Name",
+						"PropagateAtLaunch": true,
+						"Value": {
+							"Ref": "AWS::StackName"
+						}
+					},
+					{
+						"Key": "Availability",
+						"PropagateAtLaunch": true,
+						"Value": "custodian"
+					},
+					{
+						"Key": "CostCentre",
+						"PropagateAtLaunch": true,
+						"Value": "PD"
+					}
+				]
+			},
+			"UpdatePolicy": {
+				"AutoScalingRollingUpdate": {
+					"MinInstancesInService": 0
+				}
+			}
+		}
+	}
+}
