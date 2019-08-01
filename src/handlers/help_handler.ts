@@ -53,9 +53,6 @@ export class HelpHandler implements MatchingMessageHandler {
 		reply: (text: string) => void,
 		react: (text: string) => void
 	) {
-		if (message.indexOf("Damon") > -1) {
-			react("tumbler_glass")
-		}
 		if (!wasHandled && startsWithTSBot) {
 			if (startsWithTSBot) {
 				reply(
